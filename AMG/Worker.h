@@ -9,7 +9,7 @@ public:
 
 	static double* restrict(double* v, int size);
 	static double* interpolate(double* v, int size);
-	static void apply_operator(double* v, int hfactor);
+	static double* apply_operator(double* v, int size , int hfactor);
 	static void direct_solve(double* v, double* f);
 };
 

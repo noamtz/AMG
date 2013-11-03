@@ -67,6 +67,7 @@
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="Smoother.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Tests.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="V-cycle.cpp" />
     <ClCompile Include="Worker.cpp" />
@@ -74,6 +75,7 @@
   <ItemGroup>
     <ClInclude Include="Grid.h" />
     <ClInclude Include="Smoother.h" />
+    <ClInclude Include="Tests.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="Worker.h" />
   </ItemGroup>
