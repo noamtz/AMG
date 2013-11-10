@@ -56,7 +56,7 @@ void Utils::printVector(double* v, int size){
 
 double* Utils::zerosVector(int size){
 	double* v = new double[size];
-	cout<<"CREATE V WITH SIZE: "<<size<<" POINTER: "<<v<<endl;
+	//cout<<"CREATE V WITH SIZE: "<<size<<" POINTER: "<<v<<endl;
 	for(int i=0; i<size; i++)
 		v[i] = 0;
 	return v;

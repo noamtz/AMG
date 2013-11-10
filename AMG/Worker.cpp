@@ -22,8 +22,6 @@ double* Worker::restrict(double* v, int size){
 
 double* Worker::interpolate(double* v, int size){
 	int target = size*2 + 1;//round up
-	if(target == 524287)
-		cout<<"asd";
 	double* result = new double[target];
 	for(int i=0; i<target; i++){
 

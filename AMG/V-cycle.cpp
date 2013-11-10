@@ -12,7 +12,7 @@
 
 using namespace std;
 
-#define N 1048576
+#define N 16384 // 2^14
 #define NUM_SWEEPS_DOWN 2
 
 #define PI 3.14159265359
@@ -61,7 +61,7 @@ void vcycle(int num, Grid* grids){
 		double h2 = i > 0 ? pow(h , 2) : pow(1.0/N , 2);
 
 		//Interpolate
-		double* vh = Worker::interpolate(grids[i+1].v, grid_size);
+		double* vh = Worker::interpolate(grids[i + 1].v, gridSize(i+1));
 
 		//Correction
 		Utils::add(grids[i].v, vh, grid_size);
