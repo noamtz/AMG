@@ -45,6 +45,15 @@ double Utils::inf_norm(double* target , int size){
 
 }
 
+double Utils::l2_norm(double* target, int size){
+	double norm = 0;
+	for (int j = 0; j<size; j++){
+		norm += target[j] * target[j];
+	}
+	return norm;
+}
+
+
 void Utils::printVector(double* v, int size){
 	cout<<"Print Vector:"<<endl<<endl;
 	for(int i=0; i<size; i++){
@@ -56,7 +65,6 @@ void Utils::printVector(double* v, int size){
 
 double* Utils::zerosVector(int size){
 	double* v = new double[size];
-	//cout<<"CREATE V WITH SIZE: "<<size<<" POINTER: "<<v<<endl;
 	for(int i=0; i<size; i++)
 		v[i] = 0;
 	return v;

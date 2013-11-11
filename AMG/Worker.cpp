@@ -48,11 +48,11 @@ double* Worker::apply_operator(double* v, int size, double h2){
 	//cout<<"STENCIL: "<<h2*-1<<", "<<h2*2<<","<<h2*-1<<" GRID SIZE: "<<size<<endl;
 	double* temp = new double[size];
 	// the v array has to have at least 2 elements
-	temp[0] = h2*(2*v[0] - v[1]); //first edge case
+	temp[0] = 0;//h2*(2*v[0] - v[1]); //first edge case
 	for(int i=1; i<size-1; i++){
 		temp[i] = h2*(2*v[i] - v[i-1] - v[i+1]);
 	}
-	temp[size-1] = h2*(2*v[size-1] - v[size-2]); //last edge case
+	temp[size - 1] = 0;//h2*(2*v[size-1] - v[size-2]); //last edge case
 
 	return temp;
 }
