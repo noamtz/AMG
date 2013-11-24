@@ -11,5 +11,6 @@ public:
 	static void printVector(double* v, int size);
 	static double* zerosVector(int size);
 	static int log2( double n );
+	static double l2_norm(double* target, int size);
 };
 
