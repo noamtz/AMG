@@ -7,7 +7,7 @@ public class Test {
 		testAmg.classify();
 		testAmg.computeWeight();
 		testAmg.buildA2h();
-		testAmg.buildInterpolation();
+		//testAmg.buildInterpolation();
 	}
 
 	public void classify() {
@@ -61,10 +61,10 @@ public class Test {
 	public void buildInterpolation(){
 		Amg amg = new Amg();
 		GridPoint[] nodes = new GridPoint[4];
-		nodes[0] = new GridPoint(0, 1);
-		nodes[1] = new GridPoint(1, 1);
-		nodes[2] = new GridPoint(2, 2);
-		nodes[3] = new GridPoint(3, 1);
+		nodes[0] = new GridPoint(0, 2);
+		nodes[1] = new GridPoint(1, 3);
+		nodes[2] = new GridPoint(2, 3);
+		nodes[3] = new GridPoint(3, 2.4);
 		
 		nodes[0].type = PointType.C_POINT;
 		nodes[1].type = PointType.F_POINT;
@@ -90,7 +90,7 @@ public class Test {
 		
 		double[][] Inter = amg.buildInterpolation(nodes, A, 2);
 		
-		//printMatrix(Inter, "Interpolation: ");
+		printMatrix(Inter, "Interpolation: ");
 		
 		for(int i=0;i<Inter.length; i++){
 			double sum = 0;
@@ -101,8 +101,8 @@ public class Test {
 		}
 		System.out.println("<buildInterpolation> excecute successfully");		
 		
-//		for(GridPoint gp: nodes)
-//			System.out.println(gp);
+		for(GridPoint gp: nodes)
+			System.out.println(gp);
 	}
 	
 	public void  buildA2h(){
@@ -110,10 +110,10 @@ public class Test {
 		boolean succeeded = true;
 		
 		GridPoint[] nodes = new GridPoint[4];
-		nodes[0] = new GridPoint(0, 1);
-		nodes[1] = new GridPoint(1, 1);
-		nodes[2] = new GridPoint(2, 2);
-		nodes[3] = new GridPoint(3, 1);
+		nodes[0] = new GridPoint(0, 2);
+		nodes[1] = new GridPoint(1, 3);
+		nodes[2] = new GridPoint(2, 3);
+		nodes[3] = new GridPoint(3, 2.4);
 		
 		nodes[0].type = PointType.C_POINT;
 		nodes[1].type = PointType.F_POINT;
@@ -123,23 +123,27 @@ public class Test {
 		nodes[0].order = 0;
 		nodes[3].order = 1;
 		
-		//		  0      1    2    3
+						//		  0      1    2    3
 		double[][] A = {{ 2 ,  -0.2 , -1.8  ,   0  },      //0
-						{ -0.2,    3  ,  -0.8  ,  -2},     //1
-						{ -1.8 ,    -0.8  ,  3  ,  -0.4},  //2
-						{  0 , -2  , -0.4,      2.4 }};    //3
+				{ -0.2,    3  ,  -0.8  ,  -2},     //1
+				{ -1.8 ,    -0.8  ,  3  ,  -0.4},  //2
+				{  0 , -2  , -0.4,      2.4 }};    //3
+		
+		amg.classify(A, nodes);
 		
 		double[][] Inter = amg.buildInterpolation(nodes, A, 2);
-		
+
 		double[][] Rest = amg.buildRestriction(Inter);
 		
 		
 		printMatrix(Inter, "Interpolation Matrix: ");
 		printMatrix(Rest, "Restriction Matrix: ");
 		
-		double[][] expectedResult = {{3155.000, 3794.000},
-									 {1059.000, 1274.000}};
+		double[][] expectedResult = {{ 0.922 ,-0.922},
+									 { 0.922 ,-0.922}};
 		
+		
+	
 		double[][] actualResult = amg.buildA2h(Rest, A, Inter);
 		
 		if(expectedResult.length != actualResult.length ||

@@ -97,7 +97,7 @@ public class Amg {
 	public double[][] buildRestriction(double[][] Inter){ 
 		double[][] I = new double[Inter[0].length][Inter.length];
 		for(int i=0; i<I.length; i++)
-			for(int j=0; j<I.length; j++)
+			for(int j=0; j<I[0].length; j++)
 				I[i][j] = Inter[j][i];
 		return I;
 	}
