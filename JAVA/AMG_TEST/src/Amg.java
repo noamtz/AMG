@@ -64,24 +64,21 @@ public class Amg {
 
 	public double computeWeight2pt(GridPoint gp, int j, double[][] A){
 		double aii = A[gp.id][gp.id];
-
 		double Dw = 0;
 		for(int n : gp.Diw.keySet())
 			Dw += A[gp.id][n];
 		double denominator = aii + Dw;
-
 		double Ds = 0;
 
-		for(int k : gp.Dis.keySet()){
-			double Dsnomirator = A[gp.id][k]*A[k][j];
+		for(int m : gp.Dis.keySet()){
+			double Dsnomirator = A[gp.id][m]*A[m][j];
 			double Dsdenomirator = 0;
-			for(int m : gp.Ci.keySet())
-				Dsdenomirator += A[k][m];
+			for(int k : gp.Ci.keySet())
+				Dsdenomirator += A[m][k];
 			Ds += Dsnomirator/Dsdenomirator;
 		}
 
 		double numerator = A[gp.id][j] + Ds;
-
 		return (numerator / denominator) * -1;
 	}
 

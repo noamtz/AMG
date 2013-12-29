@@ -46,9 +46,9 @@ public class Test {
 		nodes[2].type = PointType.F_POINT;
 		nodes[3].type = PointType.F_POINT;
 		//				  0      1    2    3
-		double[][] A = {{  2,  -0.2, -1,   0},  //0
+		double[][] A = {{  2,  -0.2, -1,    0},  //0
 						{-0.2,   2,  -0.5,  0}, //1
-						{ -1,  -0.5,  3, -0.1}, //2
+						{ -1,  -0.5,  3,  -0.1}, //2
 						{  0,    0,   0.1,  1}};//3
 		
 		amg.classify(A[2], nodes);
@@ -75,38 +75,67 @@ public class Test {
 		nodes[3].order = 1;
 		
 		//				  0       1     2      3 
-		double[][] A = {{  2 ,  -0.2 , -0.1  ,   0  },  //0
-						{-0.2,    2  ,  -1  ,  -0.2},  //1
-						{ -0.1 ,    -1  ,  2  ,  -0.5},  //2
-						{  0 , -0.2  , -0.5,   2  }}; //3
+//		double[][] A = {{  2 ,  -0.2 , -0.1  ,   0  },  //0
+//						{ -0.2,    2  ,  -1  ,  -0.2},  //1
+//						{ -0.1 ,    -1  ,  2  ,  -0.5},  //2
+//						{  0 , -0.2  , -0.5,   2  }}; //3
+//		
+		double[][] A = {{ 2 ,  -0.2 , -1.8  ,   0  },      //0
+						{ -0.2,    3  ,  -0.8  ,  -2},     //1
+						{ -1.8 ,    -0.8  ,  3  ,  -0.4},  //2
+						{  0 , -2  , -0.4,      2.4 }};    //3
+
 		
 		amg.classify(A, nodes);
 		
 		double[][] Inter = amg.buildInterpolation(nodes, A, 2);
 		
-		printMatrix(Inter, "Interpolation: ");
+		//printMatrix(Inter, "Interpolation: ");
 		
-		for(GridPoint gp: nodes)
-			System.out.println(gp);
+		for(int i=0;i<Inter.length; i++){
+			double sum = 0;
+			for(int j=0;j<Inter[0].length; j++){
+				sum += Inter[i][j];
+			}
+			Assert(Math.abs((1.0 - sum)) < 0.000000001, String.format("Interpolation failed at:%d with sum: %f", i, 1.0 - sum ));
+		}
+		System.out.println("<buildInterpolation> excecute successfully");		
+		
+//		for(GridPoint gp: nodes)
+//			System.out.println(gp);
 	}
 	
 	public void  buildA2h(){
 		Amg amg = new Amg();
 		boolean succeeded = true;
 		
-		double[][] Rest = {{  8,  7, 6,  5}, 
-						   {4,   3,  2,  1}};
+		GridPoint[] nodes = new GridPoint[4];
+		nodes[0] = new GridPoint(0, 1);
+		nodes[1] = new GridPoint(1, 1);
+		nodes[2] = new GridPoint(2, 2);
+		nodes[3] = new GridPoint(3, 1);
 		
-				//		  0      1    2    3
-		double[][] A = {{  1,  2,  3,  4},  //0
-						{  2,  6,  7,  8}, //1
-						{  3,  7, 11, 12}, //2
-						{  4,  8, 12, 16}};//3
+		nodes[0].type = PointType.C_POINT;
+		nodes[1].type = PointType.F_POINT;
+		nodes[2].type = PointType.F_POINT;
+		nodes[3].type = PointType.C_POINT;
 		
-		double[][] Inter = {{1, 2},
-							{3, 4},
-							{5, 6},
-							{7, 8}};
+		nodes[0].order = 0;
+		nodes[3].order = 1;
+		
+		//		  0      1    2    3
+		double[][] A = {{ 2 ,  -0.2 , -1.8  ,   0  },      //0
+						{ -0.2,    3  ,  -0.8  ,  -2},     //1
+						{ -1.8 ,    -0.8  ,  3  ,  -0.4},  //2
+						{  0 , -2  , -0.4,      2.4 }};    //3
+		
+		double[][] Inter = amg.buildInterpolation(nodes, A, 2);
+		
+		double[][] Rest = amg.buildRestriction(Inter);
+		
+		
+		printMatrix(Inter, "Interpolation Matrix: ");
+		printMatrix(Rest, "Restriction Matrix: ");
 		
 		double[][] expectedResult = {{3155.000, 3794.000},
 									 {1059.000, 1274.000}};
