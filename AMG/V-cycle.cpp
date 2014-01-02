@@ -12,7 +12,7 @@
 
 using namespace std;
 
-#define N 64 //16384 // 2^14
+#define N 16384 // 2^14
 #define NUM_SWEEPS_DOWN 2
 
 #define PI 3.14159265359
@@ -31,7 +31,7 @@ void vcycle(int num, Grid* grids){
 
 	for (int i = 0; i<coarsest; i++){
 		int grid_size = gridSize(i);
-		double h = 1.0 / (grid_size + 1);
+		double h = 1.0 / (grid_size );
 
 		// coefficient of the grid
 		double h2 = i > 0 ? pow(h, 2) : pow(1.0 / N, 2);
@@ -52,13 +52,10 @@ void vcycle(int num, Grid* grids){
 
 	}
 
-	//double ch2 = pow(1.0 / (gridSize(coarsest)), 2);
-	//Smoother::relax(grids[coarsest].v, grids[coarsest].f, ch2, gridSize(coarsest), NUM_SWEEPS_DOWN);
-	//grids[coarsest].v[0] = 0;
 
 	for (int i = coarsest - 1; i >= 0; i--){
 		int grid_size = gridSize(i);
-		double h = 1.0 / (grid_size + 1);
+		double h = 1.0 / (grid_size);
 		// coefficient of the grid
 		double h2 = i > 0 ? pow(h, 2) : pow(1.0 / N, 2);
 
@@ -102,7 +99,7 @@ int main(int argc, char* argv[]){
 	plot(ep, grids[0].v, "vFirst", N);
 
 
-	for (int i = 0; i < 100; i++){
+	for (int i = 0; i < 60; i++){
 		vcycle(i, grids);
 		double rate = Utils::inf_norm(grids[0].residual, N) / Utils::inf_norm(residualPrevious, N) * 100;
 		cout << "After " << i + 1 << " V-cycles rate: " << rate << endl;

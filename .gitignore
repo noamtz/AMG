@@ -15,3 +15,10 @@
 *.la
 *.a
 Debug
+
+/JAVA/AMG_TEST/bin
+bin
+
+/JAVA/AMG_TEST/.classpath
+/JAVA/AMG_TEST/.project
+/JAVA/AMG_TEST/.settings/org.eclipse.jdt.core.prefs

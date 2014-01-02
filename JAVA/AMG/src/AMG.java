@@ -3,22 +3,25 @@ import java.util.ArrayList;
 
 public class AMG {
 
-	ArrayList<int[]> C = new ArrayList<>();
-	ArrayList<int[]> F = new ArrayList<>();
+	ArrayList<Integer> C = new ArrayList<>();
+	ArrayList<Integer> F = new ArrayList<>();
 	
 	public static void main(String args[]){
-		int[][] D = generateGraph(9);
+		int N = 25;
+		int root = (int) Math.sqrt(N);
+		int[][] D = generateGraph(N);
 		printMatrix(D);
 		AMGmatrix(D);
 		System.out.println();
 		for(int i=0; i<D.length;i++){
-			System.out.print(D[i][i]+ " ");
-			if(i % 3 == 0)
+			if(i % root == 0)
 				System.out.println();
+			System.out.print(D[i][i]+ " ");
+
 			//System.out.println("For point " + i + " influence on " + D[i][i] + " points");
 		}
 		
-		
+		printMatrix(D);
 		
 		
 	}
@@ -59,8 +62,8 @@ public class AMG {
 					D[i][i] += D[i][j];
 			}
 			for(int j=0; j<D[0].length; j++){
-				if(i!=j)
-					D[i][j] *= -1;
+//				if(i!=j)
+//					D[i][j] *= -1;
 			}
 		}
 	}
@@ -92,24 +95,26 @@ public class AMG {
 		boolean left = j == (node-1) && (node % root != 0);
 		boolean right = j == (node+1) && (node % root != root-1);
 		
-		boolean upLeft =  j == (node-root-1) && (node % root != 0);
-		boolean upRight =  j == (node-root+1) && (node % root != root-1);
+//		boolean upLeft =  j == (node-root-1) && (node % root != 0);
+//		boolean upRight =  j == (node-root+1) && (node % root != root-1);
+//		
+//		boolean downLeft =  j == (node+root-1) && (node % root != 0);
+//		boolean downRight =  j == (node+root+1) && (node % root != root-1);
 		
-		boolean downLeft =  j == (node+root-1) && (node % root != 0);
-		boolean downRight =  j == (node+root+1) && (node % root != root-1);
-		
-		return up || down || right || left || upLeft || upRight || downLeft || downRight;
+		return up || down || right || left ;//|| upLeft || upRight || downLeft || downRight;
 	}
 	
 	public static void printMatrix(int[][] M){
+		System.out.println();
 		System.out.print("[");
 		for(int i=0; i<M.length;i++){
 			for(int j=0;j<M[0].length;j++){
-				System.out.print(M[i][j] + " " );
+				System.out.print(M[i][j] + " ");
 			}
 			System.out.println( (i<M.length-1) ?";" : "]");
 			System.out.print(" ");
 		}
+		System.out.println();
 	}
 	
 	public static boolean hasRoot(int x){
