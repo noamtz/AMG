@@ -118,12 +118,11 @@ public class Amg {
 		return res;
 	}
 
-	public static void amgnew(){
-		//		double[][] A = initGraphDouble(81);
-		//		AMGmatrix(A);
-		double[][] A = null;
+	public void classifyGrid(Grid grid){
 
-		GridPoint[] nodes = new GridPoint[A.length];
+		GridPoint[] nodes = grid.nodes;
+		double[][] A = grid.A;
+		
 		for(int i=0;i<A.length; i++)
 			nodes[i] = new GridPoint(i, A[i][i]);
 
@@ -136,7 +135,7 @@ public class Amg {
 			gp.lamda = -1;
 
 			for(int i=0;i<nodes.length;i++)
-				if(gp.id != i && A[gp.id][i] != 0){
+				if(gp.id != i && A[gp.id][i] != 0) {
 					nodes[i].type = PointType.F_POINT;
 					nodes[i].lamda = -1;
 				}
@@ -149,8 +148,30 @@ public class Amg {
 		}
 
 	}
+	
+	public void execute() {
+		
+	}
+	
+	class Grid {
+		GridPoint[] nodes;
+		double[][] A;
+		
+		public Grid(double[][] A){
+			this.A = A;
+			nodes = new GridPoint[A.length];
+		}
+	}
+	
 	private static GridPoint getMax(GridPoint[] nodes) {
-		// TODO Auto-generated method stub
-		return null;
+		double max = Double.MIN_VALUE;
+		GridPoint p = null;
+		for(int i=0; i<nodes.length; i++)
+			if(nodes[i].lamda > max){
+				max = nodes[i].lamda;
+				p = nodes[i];
+			}
+		
+		return p;
 	}
 }
