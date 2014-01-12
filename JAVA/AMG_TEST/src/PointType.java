@@ -10,4 +10,12 @@ public enum PointType {
 	public int getValue() {
 		return value;
 	}
+	
+	public String toString(){
+		if(value == 1)
+			return "C";
+		if(value == 2)
+			return "F";
+		return "U";
+	}
 }

@@ -1,10 +1,12 @@
 
-public class Grid {
+public class MultiGrid {
 	
 	double[][] A;
 	double[] v;
 	double[] f;
 	double[] residual;
+	
+	Grid amgGrid;
 
 	public double getNormResidual(){
 		return norm(residual);

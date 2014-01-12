@@ -1,6 +1,7 @@
 
 public class Amg {
 
+	
 	/**
 	 * Classify for each grid point.
 	 * @param Ni
@@ -73,8 +74,20 @@ public class Amg {
 		for(int m : gp.Dis.keySet()){
 			double Dsnomirator = A[gp.id][m]*A[m][j];
 			double Dsdenomirator = 0;
-			for(int k : gp.Ci.keySet())
+			int aaa = -1;
+			for(int k : gp.Ci.keySet()){
 				Dsdenomirator += A[m][k];
+				aaa = k;
+			}
+			if(Dsdenomirator == 0){
+				Dsdenomirator = 1;
+				
+//				if(aaa != -1)
+//				System.out.println(String.format("A[%d][%d] = %f", m,aaa,A[m][aaa]));
+//				//System.out.println("ID: " + gp.id + " , TYPE: " + gp.type + " Ci size:" + gp.Ci.keySet().size() + ", Dsdenomirator: " + Dsdenomirator);
+//				//Utils.printVector(A[m]);
+//				System.out.println(gp);
+			}
 			Ds += Dsnomirator/Dsdenomirator;
 		}
 
@@ -106,6 +119,13 @@ public class Amg {
 		return multiply(multiply(Rest, A), Inter);
 	}
 
+	/**
+	 * Multiply 2 Matrices O(N^3)
+	 * @param A
+	 * @param B
+	 * @return
+	 */
+	
 	public double[][] multiply(double[][] A, double[][] B){
 		double[][] res = new double[A.length][B[0].length];
 		for (int i = 0; i < A.length; i++) {
@@ -118,7 +138,13 @@ public class Amg {
 		return res;
 	}
 
-	public void classifyGrid(Grid grid){
+	
+	/**
+	 * Classify the grid to C_Point or F_Point
+	 * @param grid
+	 * @return The number of C_Point in the grid
+	 */
+	public int classifyGrid(Grid grid){
 
 		GridPoint[] nodes = grid.nodes;
 		double[][] A = grid.A;
@@ -130,8 +156,9 @@ public class Amg {
 		int numOfC = 0;
 		while((gp = getMax(nodes)) != null && gp.type == PointType.UNASSIGN){
 			gp.type = PointType.C_POINT;
-			gp.order = numOfC++;
+			grid.print();
 
+			gp.order = numOfC++;
 			gp.lamda = -1;
 
 			for(int i=0;i<nodes.length;i++)
@@ -146,21 +173,24 @@ public class Amg {
 						if(i != n && A[i][n] != 0 && nodes[n].type == PointType.UNASSIGN)
 							nodes[n].lamda++;
 		}
-
+		return numOfC;
 	}
 	
-	public void execute() {
+	/**
+	 * Perform 2 grid schema
+	 * @param A
+	 * @return
+	 */
+	public Grid start(double[][] A){
+		Grid grid = new Grid(A);
+		int numOfC = classifyGrid(grid);
+		classify(A, grid.nodes);
 		
-	}
-	
-	class Grid {
-		GridPoint[] nodes;
-		double[][] A;
+		grid.Interpolation = buildInterpolation(grid.nodes, grid.A, numOfC);
+		grid.Restriction = buildRestriction(grid.Interpolation);
+		grid.A2h = buildA2h(grid.Restriction, A, grid.Interpolation);
 		
-		public Grid(double[][] A){
-			this.A = A;
-			nodes = new GridPoint[A.length];
-		}
+		return grid;
 	}
 	
 	private static GridPoint getMax(GridPoint[] nodes) {
@@ -171,7 +201,11 @@ public class Amg {
 				max = nodes[i].lamda;
 				p = nodes[i];
 			}
-		
 		return p;
+	}
+
+	
+	public static void main(String[] args){
+		
 	}
 }

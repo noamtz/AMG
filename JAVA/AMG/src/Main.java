@@ -33,8 +33,8 @@ public class Main {
 			grids[0].f[i] = 0;
 		}
 		//Boundary conditions
-		grids[0].v[0] = -1;
-		grids[0].v[N] = 1;
+		grids[0].v[0] = 0;
+		grids[0].v[N] = 0;
 
 		return grids;
 	}
@@ -109,7 +109,6 @@ public class Main {
 	public static double[] apply_operator(double[] v){
 		double[] Av = new double[v.length];
 		double h = Math.pow((v.length-1), 2); // domain is 64 not 65
-
 		for(int i=1; i<v.length-1; i++){
 			Av[i] = (2*v[i] - v[i-1] - v[i+1] )*h; 
 		}

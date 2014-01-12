@@ -10,7 +10,7 @@ public class AMG {
 		int N = 25;
 		int root = (int) Math.sqrt(N);
 		int[][] D = generateGraph(N);
-		printMatrix(D);
+		//printMatrix(D);
 		AMGmatrix(D);
 		System.out.println();
 		for(int i=0; i<D.length;i++){
@@ -21,7 +21,7 @@ public class AMG {
 			//System.out.println("For point " + i + " influence on " + D[i][i] + " points");
 		}
 		
-		printMatrix(D);
+		//printMatrix(D);
 		
 		
 	}

@@ -1,101 +1,208 @@
 import java.util.ArrayList;
 
-
 public class Main {
 
+	static int N = 9;
+	static int numOfCycles = 3;
+	static double PI = Math.PI;
 	static Amg amg;
-	static ArrayList<Grid> grids;
+	static ArrayList<MultiGrid> grids;
 	public static void main(String[] args){
 		Main m = new Main();
 		amg = new Amg();
-		m.start();
+		
+		//double[][] A = m.generateMatrix();
+		
+		double[][] A = Utils.getGraphFromFile("Clustering.txt");//
+		Utils.graphToMmatrix(A);
+		m.init(A);
+	
+		System.out.println("Before: " + Utils.norm(grids.get(0).v));
+		MultiGrid g = grids.get(0);
+//		Utils.plot(g.v, "Start");
+//		for(int i=0;i<numOfCycles;i++) {
+//			m.vcycle();
+//			grids.clear();
+//			grids.add(g);
+//		}
+//		Utils.printVector(g.v);
+//		
+//		Utils.plot(g.v, "V: Vcycle-" + numOfCycles);
+////
+//		MultiGrid grid = grids.get(0);
+//		Grid amg = grid.amgGrid;
+//		for(GridPoint gp : amg.nodes) {
+////			if(gp.type == PointType.C_POINT)
+//				//System.out.println(gp);
+//		}
+		m.relax(g, 6);
+		Utils.printVector(g.v);
+		System.out.println("After: " + Utils.norm(grids.get(0).v));
 	}
 
-	public void init(){
+
+	public void relax(MultiGrid grid ,int swipes){
+		for(int swipe=0; swipe<swipes; swipe++)
+			for(int i=0; i<grid.v.length; i++){
+				double sum = 0;
+				for(int j=0; j<grid.v.length; j++)
+					if(i != j)
+						sum += grid.v[j] * grid.A[i][j];
+				grid.v[i] = (grid.f[i] - sum) / grid.A[i][i];
+			}
+	}
+
+	public void vcycle(){
+
+		for(int i=0; grids.get(i).A.length > 2; i++) {
+			MultiGrid mGrid = grids.get(i);
+			mGrid.amgGrid = amg.start(mGrid.A);
+
+			relax(mGrid, 1); //relaxation
+			mGrid.residual = Utils.subtract(mGrid.f, Utils.applyOperator(mGrid.A, mGrid.v));//compute residual
+			
+			MultiGrid mGrid2 = new MultiGrid();
+			mGrid2.A =  mGrid.amgGrid.A2h;
+			mGrid2.f = mGrid.amgGrid.restrict(mGrid.residual);//restrict;
+			mGrid2.v = new double[mGrid2.f.length];
+			
+			grids.add(mGrid2);
+		}
+		
+		for(int i=grids.size()-2; i>=0; i--) {
+			MultiGrid mGrid = grids.get(i);
+			Utils.add(mGrid.v, mGrid.amgGrid.interpolate(grids.get(i+1).v));//correction
+			relax(mGrid, 1); //relaxation
+		}
+		
+	}
+
+	public double[][] generateMatrix() {
+		double[][] A = new double[N][N];
+		
+		double h2= Math.pow(N , 2) ;
+		
+		A[0][0] = h2*2;
+		A[0][1] = h2*-1;
+		for(int i=1; i<N-1; i++){
+			A[i][i-1] = h2*-1;
+			A[i][i] = h2*2;
+			A[i][i+1] = h2*-1;
+		}
+		A[N-1][N-2] = h2*-1;
+		A[N-1][N-1] = h2*2;
+		return A;
+	}
+	
+	public void init(double[][] A){
 		grids = new ArrayList<>();
 
-		Grid grid = new Grid();
+		MultiGrid grid = new MultiGrid();
 
-		grid.v = new double[N+1];
-		grid.f = new double[N+1];
+		grid.v = new double[N];
+		grid.f = new double[N];
 
-		for(int i=0; i<=N; i++){
-			grid.v[i] = (Math.sin(i*32*PI/N) + Math.sin(i*6*PI/N) + Math.sin(i*PI/N)) * 1.0/3;
-			grid.f[i] = 0;
+		for(int i=1; i<=N; i++){
+			grid.v[i-1] = (Math.sin(i*32*PI/N) + Math.sin(i*6*PI/N) + Math.sin(i*PI/N)) * 1.0/3;
+			grid.f[i-1] = 0;
 		}
-		//Boundary conditions
-		grid.v[0] = -1;
-		grid.v[N] = 1;
+//		//Boundary conditions
+//		grid.v[0] = 0;
+//		grid.v[N] = 0;
 
+
+		double[][] M= { {2,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+				{-1,2,-1,0,0,0,0,0,0,0,0,0,0,0,0,0},
+				{0,-1,2,-1,0,0,0,0,0,0,0,0,0,0,0,0},
+				{0,0,-1,2,-1,0,0,0,0,0,0,0,0,0,0,0},
+				{0,0,0,-1,2,-1,0,0,0,0,0,0,0,0,0,0},
+				{0,0,0,0,-1,2,-1,0,0,0,0,0,0,0,0,0},
+				{0,0,0,0,0,-1,2,-1,0,0,0,0,0,0,0,0},
+				{0,0,0,0,0,0,-1,2,-1,0,0,0,0,0,0,0},
+				{0,0,0,0,0,0,0,-1,2,-1,0,0,0,0,0,0},
+				{0,0,0,0,0,0,0,0,-1,2,-1,0,0,0,0,0},
+				{0,0,0,0,0,0,0,0,0,-1,2,-1,0,0,0,0},
+				{0,0,0,0,0,0,0,0,0,0,-1,2,-1,0,0,0},
+				{0,0,0,0,0,0,0,0,0,0,0,-1,2,-1,0,0},
+				{0,0,0,0,0,0,0,0,0,0,0,0,-1,2,-1,0},
+				{0,0,0,0,0,0,0,0,0,0,0,0,0,-1,2,-1},
+				{0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1,2}};
+		if(A == null)
+			A = M;
+
+		grid.A = A;
 		grids.add(grid);
 	}
 
-	public void start() throws Exception{
 
-		long totalTime = 0;
-		int numOfCycles = 10;
-
-		Grid grid = grids.get(0);
-
-		plot(grid.v, "V: Vcycle-0");
-
-		double prevNorm = norm(subtract(grid.f, apply_operator(grid.v)));;
-		double initialNorm = prevNorm;
-
-		System.out.println("Start residual Norm: "+ prevNorm);
-
-		for(int i=0; i<numOfCycles; i++){
-			totalTime += vcycle();
-			double currentNorm = grid.getNormResidual();
-			System.out.print("Vcycle: " + (i+1) + " current residual Norm: "+ currentNorm + " ");
-			System.out.println(" Norm Rate: " + (int)(currentNorm/prevNorm * 100) + " %");
-			prevNorm = currentNorm;
+	
+	//TESTING AMG MATRIX
+	
+	public static double[][] generateGraph(int N){
+		if(!hasRoot(N)){
+			System.err.println("Number has no root");
+			return null;
 		}
 
-		//plot(grids[0].residual, "Residual: Vcycle-" + numOfCycles);
-		plot(grid.v, "V: Vcycle-" + numOfCycles);
+		int root = (int)Math.sqrt(N);
 
-		System.out.println();
-		System.out.println("Summary: ");
-		System.out.println("Start residual norm: " + initialNorm);
-		System.out.println("End residual norm: " + norm(grid.residual));
-		System.out.println("Boundries: u[0]=" + grid.v[0] + " , u["+N+"]=" + grid.v[N]);
-		System.out.println("Elapsed time for " + numOfCycles + " V-cycles: " + totalTime/1000.0 + " sec. for: " + N + " points");
-
-
-		vectorToMatlab(grids[0].v);
-	}
-
-	public long vcycle() throws Exception{
-		long start = System.currentTimeMillis();
-		int coarsest = grids.size()-1;
-		for(int i=0; i< coarsest; i++){
-			relax(grids.get(i), 2);
-			grids.get(i).residual = subtract(grids.get(i).f, apply_operator(grids.get(i).v));
-			grids.get(i+1).f = restrict(grids.get(i).residual);
-			grids.get(i+1).v = new double[gridSize(i+1)+1];
-		}
-
-		relax(grids.get(coarsest).v, grids.get(coarsest).f , 2);
-
-		for(int i=coarsest-1; i>=0; i--){
-			add(grids.get(i).v , interpolate(grids.get(i+1).v));
-			relax(grids.get(i), 2);
-		}
-		return System.currentTimeMillis() - start;
-	}
-
-	public void relax(Grid grid ,int swipes){
-		double[] v = grid.v;
-		double[] f = grid.f;
-		double[][] A = grid.A;
-		for(int k=0; k< swipes; k++){
-			for(int i=0; i< grid.size(); i++){
-				for(int j=0; j< grid.size(); j++){
-					v[i] = (f[i] - A[i][j]*v[i]);
+		double[][] graph = new double[N][N];
+		for(int i=0; i<N;i++){
+			for(int j=i; j<N; j++)
+				if(j != i){
+					if(isValid(i, j, root)){
+						graph[i][j] = 1;
+						graph[j][i] = 1;
+					}
 				}
+		}
+		return graph;
+	}
+
+	public static boolean isValid(int node, int j , int root){
+		boolean up = j == (node-root);
+		boolean down = j == (node+root);
+		boolean left = j == (node-1) && (node % root != 0);
+		boolean right = j == (node+1) && (node % root != root-1);
+		
+//		boolean upLeft =  j == (node-root-1) && (node % root != 0);
+//		boolean upRight =  j == (node-root+1) && (node % root != root-1);
+//		
+//		boolean downLeft =  j == (node+root-1) && (node % root != 0);
+//		boolean downRight =  j == (node+root+1) && (node % root != root-1);
+		
+		return up || down || right || left ;//|| upLeft || upRight || downLeft || downRight;
+	}
+	
+	public static boolean hasRoot(int x){
+		double root = Math.sqrt(x);
+		int rootInt = (int)Math.sqrt(x);
+		return (rootInt != 0) && (rootInt/root == 1);
+	}
+	
+	public static void print(){
+		int root = (int) Math.sqrt(N);
+		double[][] D = AMGmatrix();
+		//printMatrix(D);
+		System.out.println();
+		for(int i=0; i<D.length;i++){
+			if(i % root == 0)
+				System.out.println();
+			System.out.print(D[i][i]+ " ");
+
+			//System.out.println("For point " + i + " influence on " + D[i][i] + " points");
+		}
+	}
+	
+	public static double[][] AMGmatrix(){
+		double[][] D = generateGraph(N);
+		for(int i=0; i<D.length;i++){
+			for(int j=0; j<D[0].length; j++){
+				if(i!=j)
+					D[i][i] += D[i][j];
 			}
 		}
-
+		return D;
 	}
+	
 }
