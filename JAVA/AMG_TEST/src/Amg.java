@@ -41,14 +41,16 @@ public class Amg {
 				if(max < -Ni[i])
 					max = -Ni[i]; 
 		}
-
+		
 		for(int i=0;i<Ni.length; i++){
 			if(i != gp.id && Ni[i] != 0)
 				if(-Ni[i] >= 0.2*max){
 					if(nodes[i].type == PointType.C_POINT)
 						gp.Ci.put(i, nodes[i]);
-					else
+					else{
 						gp.Dis.put(i, nodes[i]);
+						gp.Dependence.put(i,-Ni[i]);
+					}
 				}
 				else
 					gp.Diw.put(i, nodes[i]);

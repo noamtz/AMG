@@ -1,8 +1,10 @@
+package V;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import javax.swing.JFrame;
 
@@ -10,14 +12,16 @@ import javax.swing.JFrame;
 
 public class Utils {
 	
-	static boolean printTypedGrid = true;
+	static boolean printTypedGrid = false;
 
-	public static double norm(double[] vector){
+	public static double norm(SparseVector vector){
 
 		double max = 0;
-		for(int i=0; i<vector.length; i++){
-			if(max < Math.abs(vector[i]))
-				max = Math.abs(vector[i]);
+		Iterator<Integer> itr = vector.Iterator();
+		while(itr.hasNext()){
+			int i = itr.next();
+			if(max < Math.abs(vector.get(i)))
+				max = Math.abs(vector.get(i));
 		}
 		return max;
 	}
@@ -67,21 +71,21 @@ public class Utils {
 		System.out.println();
 	}
 	
-	public static void plot(double v[] , String name){
-		ArrayList<Double> list = new ArrayList<Double>(); 
-		double factor = (norm(v) < 0.01) ? 1000 : (norm(v) > 100) ? 1.0/1000 : 6;
-		for(int i=0; i<v.length;i++){
-			list.add(v[i]*factor);
-		}
-		DrawGraph mainPanel = new DrawGraph(list, norm(v));
-
-		JFrame frame = new JFrame(name);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.getContentPane().add(mainPanel);
-		frame.pack();
-		frame.setLocationByPlatform(true);
-		frame.setVisible(true);
-	}
+//	public static void plot(SparseVector v , String name){
+//		ArrayList<Double> list = new ArrayList<Double>(); 
+//		double factor = (norm(v) < 0.01) ? 1000 : (norm(v) > 100) ? 1.0/1000 : 6;
+//		for(int i=0; i<v.length;i++){
+//			list.add(v[i]*factor);
+//		}
+//		DrawGraph mainPanel = new DrawGraph(list, norm(v));
+//
+//		JFrame frame = new JFrame(name);
+//		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		frame.getContentPane().add(mainPanel);
+//		frame.pack();
+//		frame.setLocationByPlatform(true);
+//		frame.setVisible(true);
+//	}
 	
 	public static double[][] getGraphFromFile(String path){
 		double A[][] = null;

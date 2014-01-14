@@ -2,41 +2,50 @@ import java.util.ArrayList;
 
 public class Main {
 
-	static int N = 9;
-	static int numOfCycles = 3;
+	static int N;
+	static int numOfCycles = 1;
 	static double PI = Math.PI;
 	static Amg amg;
 	static ArrayList<MultiGrid> grids;
 	public static void main(String[] args){
 		Main m = new Main();
 		amg = new Amg();
-		
 		//double[][] A = m.generateMatrix();
 		
 		double[][] A = Utils.getGraphFromFile("Clustering.txt");//
+		//double[][] A = Utils.getGraphFromSTPFile("r-graph.stp");
+		N = A.length;
 		Utils.graphToMmatrix(A);
 		m.init(A);
 	
 		System.out.println("Before: " + Utils.norm(grids.get(0).v));
 		MultiGrid g = grids.get(0);
 //		Utils.plot(g.v, "Start");
-//		for(int i=0;i<numOfCycles;i++) {
-//			m.vcycle();
-//			grids.clear();
-//			grids.add(g);
-//		}
-//		Utils.printVector(g.v);
-//		
+		for(int i=0;i<numOfCycles;i++) {
+			m.vcycle();
+			grids.clear();
+			grids.add(g);
+		}
+		Utils.printVector(g.v);
+		
 //		Utils.plot(g.v, "V: Vcycle-" + numOfCycles);
 ////
-//		MultiGrid grid = grids.get(0);
-//		Grid amg = grid.amgGrid;
-//		for(GridPoint gp : amg.nodes) {
-////			if(gp.type == PointType.C_POINT)
-//				//System.out.println(gp);
+		MultiGrid grid = grids.get(0);
+		System.out.println(grids.size());
+		Grid amgS = grid.amgGrid;
+		for(GridPoint gp : amgS.nodes) {
+			if(gp.type == PointType.C_POINT)
+				System.out.println(gp);
+		}
+//		MultiGrid g2 = new MultiGrid();
+//		g2.amgGrid = amg.start(amgS.A2h);
+//		for(GridPoint gp : g2.amgGrid.nodes) {
+//			//if(gp.type == PointType.C_POINT)
+//				System.out.println(gp);
 //		}
-		m.relax(g, 6);
-		Utils.printVector(g.v);
+//		Utils.printMatrix(grid.amgGrid.A2h);
+		//m.relax(g, 6);
+		//Utils.printVector(g.v);
 		System.out.println("After: " + Utils.norm(grids.get(0).v));
 	}
 
