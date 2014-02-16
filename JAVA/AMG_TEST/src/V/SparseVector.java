@@ -92,14 +92,18 @@ public class SparseVector {
         return c;
     }
     
+    public SparseVector opposite(){
+    	 SparseVector a = this;
+    	 SparseVector c = new SparseVector(N);
+    	 for (int i : a.st)
+    		 c.put(i, -1*a.get(i));
+    	 return c;
+    }
+    
     // return a - b
     public SparseVector minus(SparseVector b) {
         SparseVector a = this;
-        if (a.N != b.N) throw new RuntimeException("Vector lengths disagree");
-        SparseVector c = new SparseVector(N);
-        for (int i : a.st) c.put(i, b.get(i));                // c = b
-        for (int i : b.st) c.put(i, a.get(i) + c.get(i));     // c = a - c
-        return c;
+        return a.plus(b.opposite());
     }
 
     // return a string representation
@@ -111,6 +115,12 @@ public class SparseVector {
         return s;
     }
 
+    public double[] toArray(){
+    	double[] res = new double[N]; 
+    	for(int i : st)
+    		res[i] = st.get(i);
+    	return res;
+    }
 
     // test client
     public static void main(String[] args) {
@@ -124,8 +134,8 @@ public class SparseVector {
         b.put(4, 0.90);
         System.out.println("a = " + a);
         System.out.println("b = " + b);
-        System.out.println("a dot b = " + a.dot(b));
-        System.out.println("a + b   = " + a.plus(b));
+        //System.out.println("a dot b = " + a.dot(b));
+        System.out.println("a - b   = " + a.minus(b));
     }
 
 }

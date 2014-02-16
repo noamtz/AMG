@@ -190,4 +190,30 @@ public class Utils {
 		graphToMmatrix(G);
 		printMatrix(G);
 	}
+	
+	public static SparseMatrix toSparse(double[][] A){
+		SparseMatrix M = new SparseMatrix(A.length, A[0].length,true);
+		for(int i=0; i<A.length; i++)
+			for(int j=0; j<A.length; j++)
+				if(A[i][j] != 0)
+					M.put(i, j, A[i][j]);
+		return M;
+	}
+	
+	public static void plot(SparseVector v , String name){
+		ArrayList<Double> list = new ArrayList<Double>(); 
+		double factor = (norm(v) < 0.01) ? 1000 : (norm(v) > 100) ? 1.0/1000 : 6;
+		double[] varr = v.toArray();
+		for(int i=0; i<varr.length;i++){
+			list.add(varr[i]*factor);
+		}
+		DrawGraph mainPanel = new DrawGraph(list, norm(v));
+
+		JFrame frame = new JFrame(name);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.getContentPane().add(mainPanel);
+		frame.pack();
+		frame.setLocationByPlatform(true);
+		frame.setVisible(true);
+	}
 }

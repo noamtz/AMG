@@ -8,6 +8,9 @@ public class Grid {
 	public Grid(double[][] A){
 		this.A = A;
 		nodes = new GridPoint[A.length];
+		
+		for(int i=0;i<A.length; i++)
+			nodes[i] = new GridPoint(i, A[i][i]);
 	}
 	
 	public double[] restrict(double[] v){

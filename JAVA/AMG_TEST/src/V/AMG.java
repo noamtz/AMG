@@ -1,10 +1,98 @@
 package V;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import V.GridNode.NodeType;
 
 public class AMG {
+
+	private void computeLamda(Grid grid){
+		for(GridNode gn : grid.nodes){
+			gn.lamda = grid.A.getRow(gn.id).nnz()-1;
+		}
+	}
+
+
+	public int classifyGrid(Grid grid){
+		GridNode[] nodes = grid.nodes;
+		SparseMatrix A = grid.A;
+		GridNode gn = null;
+		int numOfC = 0;
+		while((gn = getMax(nodes)) != null){
+			gn.type = NodeType.C;
+			gn.order = numOfC++;
+			SparseVector neighbors = A.getRow(gn.id);
+			Iterator<Integer> itr = neighbors.Iterator();
+			while(itr.hasNext()){
+				Integer i = itr.next();
+				if(i != gn.id){
+					nodes[i].type = NodeType.F;
+					nodes[i].lamda = Double.MIN_VALUE;
+				}
+			}
+
+			itr = neighbors.Iterator();
+
+			while(itr.hasNext()){
+				Integer i = itr.next();
+				if(i != gn.id){
+					SparseVector nn = A.getRow(i);
+					Iterator<Integer> itr2 = neighbors.Iterator();
+					while(itr2.hasNext()){
+						Integer n = itr2.next();
+						if(i != n && nodes[n].type == NodeType.UNASSIGN)
+							nodes[n].lamda++;
+					}
+				}
+			}
+		}
+
+		//Second pass
+		for(GridNode sgn : nodes){
+			if(sgn.type != NodeType.C){
+				ArrayList<Integer> Cit = new ArrayList<Integer>();
+
+				SparseVector neighbors = A.getRow(sgn.id);
+				Iterator<Integer> itr = neighbors.Iterator();
+				while(itr.hasNext()){
+					Integer j = itr.next();
+					if(j != sgn.id && nodes[j].type != NodeType.C) {
+						Set<Integer> keysInJ = new HashSet<Integer>(nodes[j].Ci.keySet());
+						Set<Integer> keysInI = new HashSet<Integer>(sgn.Ci.keySet());
+						keysInJ.retainAll(keysInI);
+						if(keysInJ.size() == 0){
+							Cit.add(j);
+						}	
+					}
+				}
+				if(Cit.size() > 1){ 
+					sgn.type = NodeType.C;
+					sgn.order = numOfC++;
+				}
+				else if(Cit.size() == 1){ 
+					nodes[Cit.get(0)].type = NodeType.C;
+					nodes[Cit.get(0)].order = numOfC++;
+				}
+			}
+		}
+		return numOfC;
+	}
+
+	public GridNode getMax(GridNode[] nodes){
+		double max = Double.MIN_VALUE;
+		GridNode res = null;
+		for(GridNode gn : nodes){
+			if(gn.lamda > max){
+				max = gn.lamda;
+				res = gn;
+			}				
+		}
+		if(res != null) res.lamda = Double.MIN_VALUE;
+		return res;
+	}
 
 
 	/**
@@ -12,20 +100,23 @@ public class AMG {
 	 * @param grid
 	 * @return The number of C NODES in the grid
 	 */
-	public int classifyGrid(Grid grid){
+	public int classifyGridA(Grid grid){
+		computeLamda(grid);
+
 
 		IndexMaxPQ<GridNode> pq = grid.nodesInSet();
 		GridNode[] nodes = grid.nodes;
 		SparseMatrix A = grid.A;
 		GridNode gn = null;
 		int numOfC = 0;
+		//First Pass
 		while(!pq.isEmpty()){
 			int del = pq.delMax();
 			gn = nodes[del];
-			System.out.println("Prime deleted: " + del);
+			//System.out.println(gn.id + " " + gn.lamda);
 
 			gn.type = NodeType.C;
-			grid.print();
+			//grid.print();
 
 			gn.order = numOfC++;
 
@@ -38,7 +129,7 @@ public class AMG {
 					nodes[i].type = NodeType.F;
 
 					if(pq.contains(i)){
-						System.out.println("Secondery deleted: " + i);
+						//System.out.println("Secondery deleted: " + i);
 						pq.delete(nodes[i].id);
 					}
 
@@ -59,6 +150,34 @@ public class AMG {
 				}
 			}
 
+		}
+		//Second pass
+		for(GridNode sgn : nodes){
+			if(sgn.type != NodeType.C){
+				ArrayList<Integer> Cit = new ArrayList<Integer>();
+
+				SparseVector neighbors = A.getRow(sgn.id);
+				Iterator<Integer> itr = neighbors.Iterator();
+				while(itr.hasNext()){
+					Integer j = itr.next();
+					if(j != sgn.id && nodes[j].type != NodeType.C) {
+						Set<Integer> keysInJ = new HashSet<Integer>(nodes[j].Ci.keySet());
+						Set<Integer> keysInI = new HashSet<Integer>(sgn.Ci.keySet());
+						keysInJ.retainAll(keysInI);
+						if(keysInJ.size() == 0){
+							Cit.add(j);
+						}	
+					}
+				}
+				if(Cit.size() > 1){ 
+					sgn.type = NodeType.C;
+					sgn.order = numOfC++;
+				}
+				else if(Cit.size() == 1){ 
+					nodes[Cit.get(0)].type = NodeType.C;
+					nodes[Cit.get(0)].order = numOfC++;
+				}
+			}
 		}
 		return numOfC;
 	}
@@ -106,18 +225,19 @@ public class AMG {
 		}
 		itr = Ni.Iterator();
 		while(itr.hasNext()){
-			int i = itr.next();
-			if(i != gn.id)
-				if(-Ni.get(i) >= 0.2*max){
-					if(nodes[i].type == NodeType.C)
-						gn.Ci.put(i, nodes[i]);
-					else{
-						gn.Dis.put(i, nodes[i]);
-						gn.Dependence.put(i,-Ni.get(i));
+			int j = itr.next();
+			if(j != gn.id)
+				if(-Ni.get(j) >= 0.2*max){
+					if(nodes[j].type == NodeType.C)
+						gn.Ci.put(j, nodes[j]);
+					else {
+						//System.out.println(gn.id + "," + j + " = " + -Ni.get(j));
+						gn.Dis.put(j, nodes[j]);
+						gn.Dependence.put(j,-Ni.get(j));
 					}
 				}
 				else
-					gn.Diw.put(i, nodes[i]);
+					gn.Diw.put(j, nodes[j]);
 		}
 	}
 
@@ -136,23 +256,16 @@ public class AMG {
 			Dw += A.get(gn.id,n);
 		double denominator = aii + Dw;
 		double Ds = 0;
-
+		
 		for(int m : gn.Dis.keySet()){
 			double Dsnomirator = A.get(gn.id,m)*A.get(m,j);
 			double Dsdenomirator = 0;
-			int aaa = -1;
 			for(int k : gn.Ci.keySet()){
 				Dsdenomirator += A.get(m,k);
-				aaa = k;
 			}
 			if(Dsdenomirator == 0){
 				Dsdenomirator = 1;
-
-				//				if(aaa != -1)
-				//				System.out.println(String.format("A[%d][%d] = %f", m,aaa,A[m][aaa]));
-				//				//System.out.println("ID: " + gp.id + " , TYPE: " + gp.type + " Ci size:" + gp.Ci.keySet().size() + ", Dsdenomirator: " + Dsdenomirator);
-				//				//Utils.printVector(A[m]);
-				//				System.out.println(gp);
+				System.err.println("Dsdenomirator is zero");
 			}
 			Ds += Dsnomirator/Dsdenomirator;
 		}
@@ -162,11 +275,12 @@ public class AMG {
 	}
 
 	public SparseMatrix buildInterpolation(GridNode[] nodes, SparseMatrix A, int Nc){
-		//		double[][] I = new double[A.length][Nc];
-		SparseMatrix I = new SparseMatrix(A.size());
+		SparseMatrix I = new SparseMatrix(A.dimensions()[0],Nc,true);
 		for(GridNode gn : nodes){
-			if(gn.type == NodeType.C)
+			if(gn.type == NodeType.C){
+
 				I.put(gn.id,gn.order, 1);
+			}
 			else
 				for(int j : gn.Ci.keySet())
 					I.put(gn.id,nodes[j].order ,computeWeight2pt(gn, j, A));
@@ -174,46 +288,15 @@ public class AMG {
 		return I;
 	}
 
-	public SparseMatrix buildRestriction(SparseMatrix Inter , int Nc){ 
-		SparseMatrix I = new SparseMatrix(Inter.size());
-
-		for(int i=0; i< Inter.size(); i++){
-			SparseVector row = Inter.getRow(i);
-			Iterator<Integer> itr = row.Iterator();
-			while(itr.hasNext()){
-				int j = itr.next();
-				I.put(j, i, Inter.get(i, j));
-			}
-
-		}
-
-		return I;
+	public SparseMatrix buildRestriction(SparseMatrix Inter){ 
+		return Inter.transpose(true);
 	}
 
 	public SparseMatrix buildA2h(SparseMatrix Rest, SparseMatrix A, SparseMatrix Inter){
-		return multiply(multiply(Rest, A), Inter);
+		//System.out.println("Size Rest="+Rest.dimensions()[0]+","+ Rest.dimensions()[1]+ " Size A: " + A.size() + "     "   + (Rest.multiply(A)).dimensions()[0]+","+(Rest.multiply(A)).dimensions()[1]+"     " + "Size Inter="+Inter.dimensions()[0]+","+ Inter.dimensions()[1]);
+		return (Rest.multiply(A)).multiply(Inter);
 	}
 
-	/**
-	 * Multiply 2 Sparse Matrices
-	 * @param A
-	 * @param B
-	 * @return
-	 */
-
-	public SparseMatrix multiply(SparseMatrix A, SparseMatrix B){
-		SparseMatrix res = new SparseMatrix(A.size());
-		B.computeCols();
-		for(int k = 0; k < B.size(); k++){
-			for (int i = 0; i < A.size(); i++) {
-				SparseVector row = A.getRow(i);
-				SparseVector col = B.getCols(k);
-				res.put(k, i, row.dot(col));
-			}
-		}
-		return res;
-	}
-	
 	/**
 	 * Perform 2 grid schema
 	 * @param A
@@ -222,9 +305,9 @@ public class AMG {
 	public void start(Grid g){
 		int numOfC = classifyGrid(g);
 		classify(g.A, g.nodes);
-		
+
 		g.Interpolation = buildInterpolation(g.nodes, g.A, numOfC);
-		g.Restriction = buildRestriction(g.Interpolation,numOfC);
+		g.Restriction = buildRestriction(g.Interpolation);
 		g.A2h = buildA2h(g.Restriction, g.A, g.Interpolation);
 	}
 }

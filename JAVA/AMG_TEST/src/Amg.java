@@ -1,7 +1,9 @@
 
+
+
 public class Amg {
 
-	
+
 	/**
 	 * Classify for each grid point.
 	 * @param Ni
@@ -11,7 +13,7 @@ public class Amg {
 		for(GridPoint gp : nodes)
 			classify(gp, A[gp.id], nodes);
 	}
-	
+
 	/**
 	 * Classify for each grid point.
 	 * @param Ni
@@ -41,13 +43,14 @@ public class Amg {
 				if(max < -Ni[i])
 					max = -Ni[i]; 
 		}
-		
+
 		for(int i=0;i<Ni.length; i++){
 			if(i != gp.id && Ni[i] != 0)
 				if(-Ni[i] >= 0.2*max){
 					if(nodes[i].type == PointType.C_POINT)
 						gp.Ci.put(i, nodes[i]);
 					else{
+						//System.out.println(gp.id + "," + i + " = " + Ni[i]);
 						gp.Dis.put(i, nodes[i]);
 						gp.Dependence.put(i,-Ni[i]);
 					}
@@ -66,13 +69,14 @@ public class Amg {
 	}
 
 	public double computeWeight2pt(GridPoint gp, int j, double[][] A){
+
 		double aii = A[gp.id][gp.id];
 		double Dw = 0;
 		for(int n : gp.Diw.keySet())
 			Dw += A[gp.id][n];
 		double denominator = aii + Dw;
 		double Ds = 0;
-
+	
 		for(int m : gp.Dis.keySet()){
 			double Dsnomirator = A[gp.id][m]*A[m][j];
 			double Dsdenomirator = 0;
@@ -83,12 +87,7 @@ public class Amg {
 			}
 			if(Dsdenomirator == 0){
 				Dsdenomirator = 1;
-				
-//				if(aaa != -1)
-//				System.out.println(String.format("A[%d][%d] = %f", m,aaa,A[m][aaa]));
-//				//System.out.println("ID: " + gp.id + " , TYPE: " + gp.type + " Ci size:" + gp.Ci.keySet().size() + ", Dsdenomirator: " + Dsdenomirator);
-//				//Utils.printVector(A[m]);
-//				System.out.println(gp);
+				System.err.println("Dsdenomirator is 0");
 			}
 			Ds += Dsnomirator/Dsdenomirator;
 		}
@@ -102,9 +101,14 @@ public class Amg {
 		for(GridPoint gp : nodes){
 			if(gp.type == PointType.C_POINT)
 				I[gp.id][gp.order] = 1;
-			else
-				for(int j : gp.Ci.keySet())
-					I[gp.id][nodes[j].order] = computeWeight2pt(gp, j, A);
+			else{
+				for(int j : gp.Ci.keySet()){			
+					double weight = computeWeight2pt(gp, j, A);
+					gp.Dependence.put(j, weight);
+					//System.out.println("Build Interpolate for: "+gp.id+ " From:"+j + " with weight: " + weight + " , Indexes" + String.format("(%d,%d)", gp.id,nodes[j].order));
+					I[gp.id][nodes[j].order] = weight;
+				}
+			}
 		}
 		return I;
 	}
@@ -127,7 +131,7 @@ public class Amg {
 	 * @param B
 	 * @return
 	 */
-	
+
 	public double[][] multiply(double[][] A, double[][] B){
 		double[][] res = new double[A.length][B[0].length];
 		for (int i = 0; i < A.length; i++) {
@@ -140,6 +144,16 @@ public class Amg {
 		return res;
 	}
 
+
+	private void computeLamda(Grid grid){
+		for(GridPoint gn : grid.nodes){
+			int count = 0;
+			for(int i=0; i<grid.A.length; i++)
+				if(gn.id != i && grid.A[gn.id][i] != 0)
+					count++;
+			gn.lamda = count;
+		}
+	}
 	
 	/**
 	 * Classify the grid to C_Point or F_Point
@@ -147,18 +161,15 @@ public class Amg {
 	 * @return The number of C_Point in the grid
 	 */
 	public int classifyGrid(Grid grid){
-
-		GridPoint[] nodes = grid.nodes;
+		computeLamda(grid);
+		GridPoint[] nodes = grid.nodes;	
 		double[][] A = grid.A;
-		
-		for(int i=0;i<A.length; i++)
-			nodes[i] = new GridPoint(i, A[i][i]);
 
 		GridPoint gp = null;
 		int numOfC = 0;
 		while((gp = getMax(nodes)) != null && gp.type == PointType.UNASSIGN){
 			gp.type = PointType.C_POINT;
-			grid.print();
+			//grid.print();
 
 			gp.order = numOfC++;
 			gp.lamda = -1;
@@ -175,9 +186,65 @@ public class Amg {
 						if(i != n && A[i][n] != 0 && nodes[n].type == PointType.UNASSIGN)
 							nodes[n].lamda++;
 		}
+
+		//Second pass
+		for(int i=0;i<nodes.length;i++)
+			if(nodes[i].type == PointType.F_POINT)
+				nodes[i].lamda = 0;
+
+		while((gp = getFF(nodes)) != null){
+			gp.lamda = -1;
+			for(int n=0;n<nodes.length;n++)
+				if(gp.id != n && A[gp.id][n] != 0 && nodes[n].lamda == 0 && nodes[n].type == PointType.F_POINT) {
+					if(!hasCommonCP(gp,nodes[n],nodes,A)){
+						gp.type = PointType.C_POINT;
+						gp.order = numOfC++;
+						break;
+					}
+				}
+		}
+
+		for(int i=0;i<nodes.length;i++)
+			if(nodes[i].type == PointType.F_POINT)
+				nodes[i].lamda = -1;
+//
+//		for(int i=0; i<grid.nodes.length; i++) {
+//			System.out.print(grid.nodes[i].type + " ");
+//			if((i+1) % 4 == 0)
+//				System.out.println();
+//		}
+		
 		return numOfC;
 	}
-	
+
+	public boolean hasCommonCP(GridPoint a, GridPoint b, GridPoint[] nodes, double[][] A){
+		for(int i=0;i<nodes.length;i++){
+			if(A[a.id][i] != 0 && a.id != i){
+				if(nodes[i].type == PointType.C_POINT){
+					for(int j=0;j<nodes.length;j++){
+						if(A[b.id][j] != 0 && b.id != j){
+							if(nodes[j].type == PointType.C_POINT){
+								if(i == j){
+							
+									return true;
+								}
+
+							}
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	public GridPoint getFF(GridPoint[] nodes){
+		for(int i=0;i<nodes.length;i++)
+			if(nodes[i].type == PointType.F_POINT && nodes[i].lamda == 0)
+				return nodes[i];
+		return null;
+	}
+
 	/**
 	 * Perform 2 grid schema
 	 * @param A
@@ -187,14 +254,14 @@ public class Amg {
 		Grid grid = new Grid(A);
 		int numOfC = classifyGrid(grid);
 		classify(A, grid.nodes);
-		
+
 		grid.Interpolation = buildInterpolation(grid.nodes, grid.A, numOfC);
 		grid.Restriction = buildRestriction(grid.Interpolation);
 		grid.A2h = buildA2h(grid.Restriction, A, grid.Interpolation);
-		
+
 		return grid;
 	}
-	
+
 	private static GridPoint getMax(GridPoint[] nodes) {
 		double max = Double.MIN_VALUE;
 		GridPoint p = null;
@@ -206,8 +273,4 @@ public class Amg {
 		return p;
 	}
 
-	
-	public static void main(String[] args){
-		
-	}
 }

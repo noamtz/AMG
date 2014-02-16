@@ -9,7 +9,7 @@ public class GridPoint implements Comparable<GridPoint>{
 
 	int id, order;
 	double lamda;
-	PointType type;
+	PointType type;	
 	
 	Map<Integer, GridPoint> Ni, Ci , Dis, Diw ;
 	Map<Integer, Double> Dependence;
@@ -55,7 +55,7 @@ public class GridPoint implements Comparable<GridPoint>{
 		sb.append("For Point " + id +  " " + type + ":\n");
 		sb.append("Ci: ");
 		for(int i: Ci.keySet()){
-			sb.append(" " + i);
+			sb.append(" " + i + " (" + Dependence.get(i) + ") ");
 		}
 		sb.append("\n");
 		

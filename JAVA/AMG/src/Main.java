@@ -17,7 +17,13 @@ public class Main {
 	public static void main(String args[]) throws Exception{
 		Main m = new Main();
 		m.start();
+//		Grid[] grids = m.init();
+//		plot(grids[0].v, "Start Error");
+//		relax(grids[0].v, grids[0].f, 1000);
+//		plot(grids[0].v, "Gauss-Siedel After: " + 1000);
 	}
+	
+	
 	
 	public Grid[] init(){
 		Grid[] grids = new Grid[log2(N)];
@@ -44,7 +50,7 @@ public class Main {
 		Grid[] grids = init();
 
 		long totalTime = 0;
-		int numOfCycles = 10;
+		int numOfCycles = 1;
 
 		plot(grids[0].v, "V: Vcycle-0");
 
@@ -82,6 +88,8 @@ public class Main {
 		for(int i=0; i< coarsest; i++){
 			relax(grids[i].v, grids[i].f , 2);
 			grids[i].residual = subtract(grids[i].f, apply_operator(grids[i].v));
+//			if(i==0)
+//				System.out.println("size: " + 0 + " residual norm: " + norm(grids[i].residual));
 			grids[i+1].f = restrict(grids[i].residual);
 			grids[i+1].v = new double[gridSize(i+1)+1];
 		}

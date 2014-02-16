@@ -5,45 +5,36 @@ import java.util.Iterator;
 
 
 public class TEST {
-	static int N = 49;
+	static int N = 1024;
 	static ArrayList<Grid> grids;
 	static AMG amg;
+	static boolean toPlot = false;
+	static boolean vcycle = false;
 	public static void main(String[] args){
 		amg  = new AMG();
-//		double[][] A = Utils.getGraphFromFile("Clustering.txt");
-//		Utils.graphToMmatrix(A);
-//		SparseMatrix  M = toSparse(A);
-//		Grid grid = new Grid(M);
-//		//		IndexMaxPQ<GridNode> impq = grid.nodesInSet();
-//		//		System.out.println(grid.nodes[impq.delMax()]);
-//		//		System.out.println(grid.nodes[impq.delMax()]);
-//		//		System.out.println(grid.nodes[impq.delMax()]);
-//		//		System.out.println(M);
-//		amg.classifyGrid(grid);
 		TEST t = new TEST();
 		t.init(null);
 		
+		long totalTime =0;
+		int numOfCycles = 10;
+		
 		System.out.println("Before: " + Utils.norm(grids.get(0).v));
-		Grid g = grids.get(0);
-//		Utils.plot(g.v, "Start");
-		for(int i=0;i<1;i++) {
-			t.vcycle();
+		if(toPlot) Utils.plot(grids.get(0).v, "Start");
+		for(int i=0;i<numOfCycles;i++) {
+			totalTime += t.vcycle();
+			Grid temp = new Grid(grids.get(0).A);
+			temp.v = grids.get(0).v;
+			temp.f = new SparseVector(grids.get(0).v.size());
 			grids.clear();
-			grids.add(g);
+			grids.add(temp);
+			//t.relax(g,1000);
 		}
-//		Utils.printVector(g.v);
-
-//		Grid grid = grids.get(0);
-//		System.out.println(grids.size());
-//		Grid amgS = grid.amgGrid;
-//		for(GridPoint gp : amgS.nodes) {
-//			if(gp.type == PointType.C_POINT)
-//				System.out.println(gp);
-//		}
+		if(toPlot) Utils.plot(grids.get(0).v, "After");
 		System.out.println("After: " + Utils.norm(grids.get(0).v));
+		System.out.println("Elapsed time for " + numOfCycles + " V-cycles: " + totalTime/1000.0 + " sec. for: " + N + " points");
 
 	}
-
+	
 	public void relax(Grid grid ,int swipes){
 		for(int swipe=0; swipe<swipes; swipe++){
 			for(int i=0; i<grid.A.size(); i++){
@@ -59,53 +50,67 @@ public class TEST {
 		}
 	}
 	
-	public void vcycle(){
-
+	public long vcycle(){
+		long time = System.currentTimeMillis();
 		for(int i=0; grids.get(i).A.size() > 2; i++) {
 			Grid mGrid = grids.get(i);
+			
+			relax(mGrid, 2); //relaxation
+			
 			amg.start(mGrid);
-
-			relax(mGrid, 1); //relaxation
-			System.out.println("size a: " + mGrid.A.size() + " size v: " + mGrid.v.size());
-			mGrid.residual = mGrid.f.minus(mGrid.A.times(mGrid.v));//compute residual
+			if(vcycle) System.out.println("A: " + mGrid.A.size());
+			
+			mGrid.residual = mGrid.f.minus(mGrid.A.times(mGrid.v));//compute residual r = f - Av
 			
 			Grid mGrid2 = new Grid(mGrid.A2h);
-			mGrid2.f = mGrid2.restrict(mGrid.residual);//restrict;
+
+			mGrid2.f = mGrid.restrict(mGrid.residual);//restrict;
 			mGrid2.v = new SparseVector(mGrid2.f.size());
 			
 			grids.add(mGrid2);
 		}
-		
 		for(int i=grids.size()-2; i>=0; i--) {
 			Grid mGrid = grids.get(i);
 			mGrid.v = mGrid.v.plus(mGrid.interpolate(grids.get(i+1).v));//correction
-			relax(mGrid, 1); //relaxation
+			relax(mGrid, 2); //relaxation
 		}
-		
+		return System.currentTimeMillis() - time;
 	}
-		public void init(double[][] A){
+	
+	public void init(double[][] A){
 			grids = new ArrayList<>();
 	
-			double[][] M= { {2,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-					{-1,2,-1,0,0,0,0,0,0,0,0,0,0,0,0,0},
-					{0,-1,2,-1,0,0,0,0,0,0,0,0,0,0,0,0},
-					{0,0,-1,2,-1,0,0,0,0,0,0,0,0,0,0,0},
-					{0,0,0,-1,2,-1,0,0,0,0,0,0,0,0,0,0},
-					{0,0,0,0,-1,2,-1,0,0,0,0,0,0,0,0,0},
-					{0,0,0,0,0,-1,2,-1,0,0,0,0,0,0,0,0},
-					{0,0,0,0,0,0,-1,2,-1,0,0,0,0,0,0,0},
-					{0,0,0,0,0,0,0,-1,2,-1,0,0,0,0,0,0},
-					{0,0,0,0,0,0,0,0,-1,2,-1,0,0,0,0,0},
-					{0,0,0,0,0,0,0,0,0,-1,2,-1,0,0,0,0},
-					{0,0,0,0,0,0,0,0,0,0,-1,2,-1,0,0,0},
-					{0,0,0,0,0,0,0,0,0,0,0,-1,2,-1,0,0},
-					{0,0,0,0,0,0,0,0,0,0,0,0,-1,2,-1,0},
-					{0,0,0,0,0,0,0,0,0,0,0,0,0,-1,2,-1},
-					{0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1,2}};
+//			double[][] M= { {2,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+//					{-1,2,-1,0,0,0,0,0,0,0,0,0,0,0,0,0},
+//					{0,-1,2,-1,0,0,0,0,0,0,0,0,0,0,0,0},
+//					{0,0,-1,2,-1,0,0,0,0,0,0,0,0,0,0,0},
+//					{0,0,0,-1,2,-1,0,0,0,0,0,0,0,0,0,0},
+//					{0,0,0,0,-1,2,-1,0,0,0,0,0,0,0,0,0},
+//					{0,0,0,0,0,-1,2,-1,0,0,0,0,0,0,0,0},
+//					{0,0,0,0,0,0,-1,2,-1,0,0,0,0,0,0,0},
+//					{0,0,0,0,0,0,0,-1,2,-1,0,0,0,0,0,0},
+//					{0,0,0,0,0,0,0,0,-1,2,-1,0,0,0,0,0},
+//					{0,0,0,0,0,0,0,0,0,-1,2,-1,0,0,0,0},
+//					{0,0,0,0,0,0,0,0,0,0,-1,2,-1,0,0,0},
+//					{0,0,0,0,0,0,0,0,0,0,0,-1,2,-1,0,0},
+//					{0,0,0,0,0,0,0,0,0,0,0,0,-1,2,-1,0},
+//					{0,0,0,0,0,0,0,0,0,0,0,0,0,-1,2,-1},
+//					{0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1,2}};
+			double[][] M = new double[N][N];
+			double h = Math.pow(N, 2);
+			M[0][0] = 2*h;
+			M[0][1] = -1*h;
+			M[N-1][N-1] = 2*h;
+			M[N-1][N-2] = -1*h;
+			for(int i=1;i<N-1; i++){
+				M[i][i-1] = -1*h;
+				M[i][i] = 2*h;
+				M[i][i+1] = -1*h;
+			}
 			if(A == null)
 				A = M;
 	
-			SparseMatrix S = toSparse(A);
+			SparseMatrix S = Utils.toSparse(A);
 			Grid grid = new Grid(S);
 	
 			grid.v = new SparseVector(N);
@@ -122,15 +127,6 @@ public class TEST {
 
 			grids.add(grid);
 		}
-
-	public static SparseMatrix toSparse(double[][] A){
-		SparseMatrix M = new SparseMatrix(A.length);
-		for(int i=0; i<A.length; i++)
-			for(int j=0; j<A.length; j++)
-				if(A[i][j] != 0)
-					M.put(i, j, A[i][j]);
-		return M;
-	}
 
 	//TESTING AMG MATRIX
 

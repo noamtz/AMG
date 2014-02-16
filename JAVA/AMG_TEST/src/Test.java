@@ -1,10 +1,12 @@
 
+
 public class Test {
 
 	public static void main(String[] args)  {
 		Test testAmg = new Test();
 		
-		testAmg.classify();
+		testAmg.classifyGrid();
+		//testAmg.classify();
 		//testAmg.computeWeight();
 		//testAmg.buildA2h();
 		//testAmg.buildInterpolation();
@@ -194,5 +196,37 @@ public class Test {
 	public void Assert(boolean condition, String failedMessage){
 		if(!condition)
 			System.err.println(failedMessage);
+	}
+	
+	public void classifyGrid() {
+		Amg amg = new Amg();
+
+		double[][] M= { {2,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+				{-1,2,-1,0,0,0,0,0,0,0,0,0,0,0,0,0},
+				{0,-1,2,-1,0,0,0,0,0,0,0,0,0,0,0,0},
+				{0,0,-1,2,-1,0,0,0,0,0,0,0,0,0,0,0},
+				{0,0,0,-1,2,-1,0,0,0,0,0,0,0,0,0,0},
+				{0,0,0,0,-1,2,-1,0,0,0,0,0,0,0,0,0},
+				{0,0,0,0,0,-1,2,-1,0,0,0,0,0,0,0,0},
+				{0,0,0,0,0,0,-1,2,-1,0,0,0,0,0,0,0},
+				{0,0,0,0,0,0,0,-1,2,-1,0,0,0,0,0,0},
+				{0,0,0,0,0,0,0,0,-1,2,-1,0,0,0,0,0},
+				{0,0,0,0,0,0,0,0,0,-1,2,-1,0,0,0,0},
+				{0,0,0,0,0,0,0,0,0,0,-1,2,-1,0,0,0},
+				{0,0,0,0,0,0,0,0,0,0,0,-1,2,-1,0,0},
+				{0,0,0,0,0,0,0,0,0,0,0,0,-1,2,-1,0},
+				{0,0,0,0,0,0,0,0,0,0,0,0,0,-1,2,-1},
+				{0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1,2}};
+		
+		Grid grid = new Grid(M);
+		int numOfC= amg.classifyGrid(grid);
+
+		for(int i=0; i<grid.nodes.length; i++) {
+			System.out.print(grid.nodes[i].type + " ");
+			if((i+1) % 4 == 0)
+				System.out.println();
+		}
+		System.out.println();
+		System.out.println("Num of C's: " + numOfC);
 	}
 }

@@ -1,6 +1,9 @@
 package V;
 
 
+import V.GridNode.NodeType;
+
+
 public class Grid {
 
 	GridNode nodes[];
@@ -20,6 +23,15 @@ public class Grid {
 		IndexMaxPQ<GridNode> pq = new IndexMaxPQ<>(nodes.length);
 		for(GridNode gn : nodes)
 			pq.insert(gn.id,gn);		
+		
+		return pq;
+	}
+	
+	public IndexMaxPQ<GridNode> getFNodes(){
+		IndexMaxPQ<GridNode> pq = new IndexMaxPQ<>(nodes.length);
+		for(GridNode gn : nodes)
+			if(gn.type == NodeType.F)
+				pq.insert(gn.id,gn);		
 		
 		return pq;
 	}
