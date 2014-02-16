@@ -15,8 +15,9 @@ public class Grid {
 	public Grid(SparseMatrix A){
 		nodes = new GridNode[A.size()];
 		this.A = A;
-		for(int i=0;i<A.size(); i++)
+		for(int i=0;i<A.size(); i++){
 			nodes[i] = new GridNode(i, A.get(i, i));
+		}
 	}
 	
 	public IndexMaxPQ<GridNode> nodesInSet(){

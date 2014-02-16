@@ -7,10 +7,10 @@ import java.util.Set;
 
 public class GridNode implements Comparable<GridNode>{
 	int id, order;
-	double lamda;
+	double lamda, value;
 	NodeType type;
 	
-	Map<Integer, GridNode> Ni, Ci , Dis, Diw ;
+	Map<Integer, GridNode> Ni, Ci , Dis, Diw,S,St ;
 	Map<Integer, Double> Dependence;
 	
 	
@@ -18,6 +18,7 @@ public class GridNode implements Comparable<GridNode>{
 	public GridNode(int id, double value){
 		this.id = id;
 		this.lamda = value;
+		this.value = value;
 		this.type = NodeType.UNASSIGN;
 		
 		this.order = -1;
@@ -25,6 +26,8 @@ public class GridNode implements Comparable<GridNode>{
 		Ci = new HashMap<Integer, GridNode>();
 		Dis = new HashMap<Integer, GridNode>();
 		Diw = new HashMap<Integer, GridNode>();
+		S = new HashMap<Integer, GridNode>();
+		St = new HashMap<Integer, GridNode>();
 		Dependence = new HashMap<Integer, Double>();
 	}
 

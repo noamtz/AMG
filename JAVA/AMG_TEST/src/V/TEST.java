@@ -8,15 +8,15 @@ public class TEST {
 	static int N = 1024;
 	static ArrayList<Grid> grids;
 	static AMG amg;
-	static boolean toPlot = false;
-	static boolean vcycle = false;
+	static boolean toPlot = true;
+	static boolean vcycle = true;
 	public static void main(String[] args){
 		amg  = new AMG();
 		TEST t = new TEST();
 		t.init(null);
 		
 		long totalTime =0;
-		int numOfCycles = 10;
+		int numOfCycles = 1;
 		
 		System.out.println("Before: " + Utils.norm(grids.get(0).v));
 		if(toPlot) Utils.plot(grids.get(0).v, "Start");
@@ -54,9 +54,9 @@ public class TEST {
 		long time = System.currentTimeMillis();
 		for(int i=0; grids.get(i).A.size() > 2; i++) {
 			Grid mGrid = grids.get(i);
-			
+
 			relax(mGrid, 2); //relaxation
-			
+			if(vcycle) if(Utils.hasZeroRows(mGrid.A)) {System.out.println("Has zero row"); System.exit(1);}
 			amg.start(mGrid);
 			if(vcycle) System.out.println("A: " + mGrid.A.size());
 			
@@ -80,22 +80,6 @@ public class TEST {
 	public void init(double[][] A){
 			grids = new ArrayList<>();
 	
-//			double[][] M= { {2,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//					{-1,2,-1,0,0,0,0,0,0,0,0,0,0,0,0,0},
-//					{0,-1,2,-1,0,0,0,0,0,0,0,0,0,0,0,0},
-//					{0,0,-1,2,-1,0,0,0,0,0,0,0,0,0,0,0},
-//					{0,0,0,-1,2,-1,0,0,0,0,0,0,0,0,0,0},
-//					{0,0,0,0,-1,2,-1,0,0,0,0,0,0,0,0,0},
-//					{0,0,0,0,0,-1,2,-1,0,0,0,0,0,0,0,0},
-//					{0,0,0,0,0,0,-1,2,-1,0,0,0,0,0,0,0},
-//					{0,0,0,0,0,0,0,-1,2,-1,0,0,0,0,0,0},
-//					{0,0,0,0,0,0,0,0,-1,2,-1,0,0,0,0,0},
-//					{0,0,0,0,0,0,0,0,0,-1,2,-1,0,0,0,0},
-//					{0,0,0,0,0,0,0,0,0,0,-1,2,-1,0,0,0},
-//					{0,0,0,0,0,0,0,0,0,0,0,-1,2,-1,0,0},
-//					{0,0,0,0,0,0,0,0,0,0,0,0,-1,2,-1,0},
-//					{0,0,0,0,0,0,0,0,0,0,0,0,0,-1,2,-1},
-//					{0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1,2}};
 			double[][] M = new double[N][N];
 			double h = Math.pow(N, 2);
 			M[0][0] = 2*h;
@@ -107,10 +91,14 @@ public class TEST {
 				M[i][i] = 2*h;
 				M[i][i+1] = -1*h;
 			}
+			
+			A = Utils.imageToGraph("output.txt");
+			
 			if(A == null)
 				A = M;
 	
 			SparseMatrix S = Utils.toSparse(A);
+			N = S.size();
 			Grid grid = new Grid(S);
 	
 			grid.v = new SparseVector(N);

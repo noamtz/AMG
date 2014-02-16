@@ -242,6 +242,7 @@ public class Utils {
 	public static double[][] imageToGraph(String path){
 		double[][] I = FromImage(path);
 		double[][] graph = new double[I.length*I[0].length][I.length*I[0].length];
+		System.out.println(graph.length);
 		for(int i=0; i< I.length; i++){
 			for(int j=0; j< I[0].length; j++){
 				construct(graph, I, i,j);

@@ -120,8 +120,16 @@ public class SparseMatrix {
 		return new int[] {N,M};
 	}
 
+	public double[][] toMatrix(){
+		double[][] res = new double[N][M];
+		for(int i=0; i<N; i++)
+			for(int j=0; j<M; j++)
+				res[i][j] = get(i, j);
+		return res;
+	}
+	
 	public int size(){
-		if(N != M) throw new RuntimeException("Matrix is not symmetry");
+		if(N != M) throw new RuntimeException("Matrix is not symmetry: N=" + N + " M=" + M );
 		return N;
 	}
 

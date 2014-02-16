@@ -50,7 +50,7 @@ public class Main {
 		Grid[] grids = init();
 
 		long totalTime = 0;
-		int numOfCycles = 1;
+		int numOfCycles = 10;
 
 		plot(grids[0].v, "V: Vcycle-0");
 

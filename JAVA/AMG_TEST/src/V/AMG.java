@@ -22,6 +22,7 @@ public class AMG {
 		GridNode gn = null;
 		int numOfC = 0;
 		while((gn = getMax(nodes)) != null){
+			
 			gn.type = NodeType.C;
 			gn.order = numOfC++;
 			SparseVector neighbors = A.getRow(gn.id);
@@ -31,6 +32,8 @@ public class AMG {
 				if(i != gn.id){
 					nodes[i].type = NodeType.F;
 					nodes[i].lamda = Double.MIN_VALUE;
+					nodes[i].S.put(gn.id, gn);
+					gn.St.put(i, nodes[i]);
 				}
 			}
 
@@ -60,14 +63,16 @@ public class AMG {
 				while(itr.hasNext()){
 					Integer j = itr.next();
 					if(j != sgn.id && nodes[j].type != NodeType.C) {
-						Set<Integer> keysInJ = new HashSet<Integer>(nodes[j].Ci.keySet());
-						Set<Integer> keysInI = new HashSet<Integer>(sgn.Ci.keySet());
-						keysInJ.retainAll(keysInI);
-						if(keysInJ.size() == 0){
+						Set<Integer> keysInJ = new HashSet<Integer>(nodes[j].S.keySet());
+						Set<Integer> keysInI = new HashSet<Integer>(sgn.S.keySet());
+						keysInI.retainAll(keysInJ);
+						if(keysInI.size() == 0){
 							Cit.add(j);
+							System.out.println(String.format("(%d,%d)", sgn.id,j));
 						}	
 					}
 				}
+				//System.exit(1);
 				if(Cit.size() > 1){ 
 					sgn.type = NodeType.C;
 					sgn.order = numOfC++;
@@ -78,7 +83,39 @@ public class AMG {
 				}
 			}
 		}
+		//printGrid(grid);
+		//System.exit(1);
+		//System.out.println("Num of C's: " + numOfC);
+		//		if(A.size() == 218)
+		//		Utils.printMatrix(A.toMatrix());
+		//		System.exit(1);
 		return numOfC;
+	}
+
+
+	private void printGrid(Grid grid){
+		for(int i=0; i<grid.nodes.length; i++) {
+			System.out.print(grid.nodes[i].type + " ");
+			if((i+1) % 30 == 0)
+				System.out.println();
+		}
+		System.out.println();
+//		try {
+//			BufferedWriter out = new BufferedWriter(new FileWriter("MATRIX.txt"));
+//
+//			out.newLine();
+//			out.newLine();
+//			for(int i=0; i<grid.nodes.length; i++) {
+//				out.append(grid.nodes[i].type + " ");
+//				if((i+1) % 30 == 0)
+//					out.newLine();
+//			}
+//			out.newLine();
+//			out.newLine();
+//			out.close();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 	}
 
 	public GridNode getMax(GridNode[] nodes){
@@ -228,16 +265,18 @@ public class AMG {
 			int j = itr.next();
 			if(j != gn.id)
 				if(-Ni.get(j) >= 0.2*max){
-					if(nodes[j].type == NodeType.C)
+					if(nodes[j].type == NodeType.C) // Coarse interpolary set
 						gn.Ci.put(j, nodes[j]);
-					else {
+					else {// F Points strongly connected
 						//System.out.println(gn.id + "," + j + " = " + -Ni.get(j));
 						gn.Dis.put(j, nodes[j]);
-						gn.Dependence.put(j,-Ni.get(j));
+						gn.Dependence.put(j,-Ni.get(j)/gn.value);
 					}
 				}
-				else
+				else{ // F/C Points weakly connected 
 					gn.Diw.put(j, nodes[j]);
+					gn.Dependence.put(j,-Ni.get(j)/gn.value);
+				}
 		}
 	}
 
@@ -256,7 +295,7 @@ public class AMG {
 			Dw += A.get(gn.id,n);
 		double denominator = aii + Dw;
 		double Ds = 0;
-		
+
 		for(int m : gn.Dis.keySet()){
 			double Dsnomirator = A.get(gn.id,m)*A.get(m,j);
 			double Dsdenomirator = 0;
@@ -307,6 +346,7 @@ public class AMG {
 		classify(g.A, g.nodes);
 
 		g.Interpolation = buildInterpolation(g.nodes, g.A, numOfC);
+		Utils.hasZeroRows(g.Interpolation);
 		g.Restriction = buildRestriction(g.Interpolation);
 		g.A2h = buildA2h(g.Restriction, g.A, g.Interpolation);
 	}
